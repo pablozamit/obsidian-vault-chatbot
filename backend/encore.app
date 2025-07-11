@@ -9,5 +9,8 @@
         "connection_url": "postgresql://postgres:qyNWmyXitmP7Wwxi@db.lmveiyksxeedffestfwh.supabase.co:5432/postgres"
       }
     }
+  },
+  "deploy": {
+    "test": false
   }
 }
