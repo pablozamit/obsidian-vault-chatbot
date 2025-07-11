@@ -47,3 +47,7 @@ export interface ChatResponse {
   conversation_id: string;
   sources: SearchResult[];
 }
+
+export interface ImportDriveRequest {
+  folderUrl: string;
+}

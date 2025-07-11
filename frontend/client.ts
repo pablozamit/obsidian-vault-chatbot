@@ -86,6 +86,7 @@ import { chat as api_notes_chat_chat } from "~backend/notes/chat";
 import { list as api_notes_list_list } from "~backend/notes/list";
 import { search as api_notes_search_search } from "~backend/notes/search";
 import { upload as api_notes_upload_upload } from "~backend/notes/upload";
+import { importDrive as api_notes_gdrive_import } from "~backend/notes/gdrive";
 
 export namespace notes {
 
@@ -98,6 +99,7 @@ export namespace notes {
             this.list = this.list.bind(this)
             this.search = this.search.bind(this)
             this.upload = this.upload.bind(this)
+            this.importDrive = this.importDrive.bind(this)
         }
 
         /**
@@ -140,6 +142,14 @@ export namespace notes {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/notes/upload`, {method: "POST", body: JSON.stringify(params)})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_notes_upload_upload>
+        }
+
+        /**
+         * Imports markdown notes from a Google Drive folder URL.
+         */
+        public async importDrive(params: RequestType<typeof api_notes_gdrive_import>): Promise<ResponseType<typeof api_notes_gdrive_import>> {
+            const resp = await this.baseClient.callTypedAPI(`/notes/import-drive`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_notes_gdrive_import>
         }
     }
 }

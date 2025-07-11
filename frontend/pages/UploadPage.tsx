@@ -11,6 +11,7 @@ import type { UploadNotesResponse } from '~backend/notes/types';
 
 export function UploadPage() {
   const [files, setFiles] = useState<File[]>([]);
+  const [folderUrl, setFolderUrl] = useState('');
   const [uploadResult, setUploadResult] = useState<UploadNotesResponse | null>(null);
   const { toast } = useToast();
 
@@ -30,6 +31,27 @@ export function UploadPage() {
       toast({
         title: 'Error en la carga',
         description: 'No se pudieron procesar las notas. Inténtalo de nuevo.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      return await backend.notes.importDrive({ folderUrl });
+    },
+    onSuccess: (result: UploadNotesResponse) => {
+      setUploadResult(result);
+      toast({
+        title: 'Importación completada',
+        description: `Se procesaron ${result.processed} notas desde Google Drive.`,
+      });
+    },
+    onError: (error) => {
+      console.error('Import error:', error);
+      toast({
+        title: 'Error al importar',
+        description: 'No se pudieron importar las notas de Google Drive.',
         variant: 'destructive',
       });
     },
@@ -57,6 +79,11 @@ export function UploadPage() {
     );
 
     uploadMutation.mutate(notes);
+  };
+
+  const handleImport = () => {
+    if (!folderUrl) return;
+    importMutation.mutate();
   };
 
   return (
@@ -139,6 +166,39 @@ export function UploadPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span>Procesando archivos...</span>
+                    <span>Generando embeddings</span>
+                  </div>
+                  <Progress value={undefined} className="w-full" />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Upload className="w-5 h-5" />
+              <span>Importar desde Google Drive</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="URL de la carpeta de Google Drive"
+                value={folderUrl}
+                onChange={(e) => setFolderUrl(e.target.value)}
+                className="w-full border rounded p-2"
+              />
+              <Button onClick={handleImport} disabled={importMutation.isPending || !folderUrl} className="flex items-center space-x-2">
+                <Upload className="w-4 h-4" />
+                <span>{importMutation.isPending ? 'Importando...' : 'Importar y Procesar'}</span>
+              </Button>
+              {importMutation.isPending && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Importando notas...</span>
                     <span>Generando embeddings</span>
                   </div>
                   <Progress value={undefined} className="w-full" />
