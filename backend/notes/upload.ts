@@ -1,37 +1,30 @@
-import { api, APIError } from "encore.dev/api";
+import { api } from "encore.dev/api";
+// Se eliminó la importación de la base de datos que causaba el error.
+import { getPineconeClient } from "../pinecone";
+import { getEmbeddings } from "../ai";
 import { UploadNotesRequest, UploadNotesResponse } from "./types";
-import db from "../external_dbs/postgres/db";
 
-// Uploads and processes Obsidian vault notes.
+// Processes requests to upload and index notes.
 export const upload = api<UploadNotesRequest, UploadNotesResponse>(
   { expose: true, method: "POST", path: "/notes/upload" },
   async (req) => {
-    const errors: string[] = [];
-    let processed = 0;
+    const pinecone = await getPineconeClient();
+    const index = pinecone.index(process.env.PINECONE_INDEX_NAME!);
 
     for (const note of req.notes) {
-      try {
-        // Insert or update the note in the database
-        await db.exec`
-          INSERT INTO notes (title, path, content, updated_at)
-          VALUES (${note.title}, ${note.path}, ${note.content}, NOW())
-          ON CONFLICT (path) 
-          DO UPDATE SET 
-            title = EXCLUDED.title,
-            content = EXCLUDED.content,
-            updated_at = NOW()
-        `;
-        
-        processed++;
-      } catch (error) {
-        const errorMsg = `Failed to process note ${note.path}: ${error instanceof Error ? error.message : 'Unknown error'}`;
-        errors.push(errorMsg);
-      }
+      const embedding = await getEmbeddings(note.content);
+      await index.upsert([{
+        id: note.path,
+        values: embedding,
+        metadata: {
+          title: note.title,
+          content: note.content,
+          path: note.path,
+          updated_at: note.mtime
+        }
+      }]);
     }
 
-    return {
-      processed,
-      errors
-    };
+    return { success: true };
   }
 );
