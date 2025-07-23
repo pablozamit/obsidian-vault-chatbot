@@ -2,13 +2,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { secret } from "encore.dev/config";
 import { SearchResult } from "./notes/types";
 
-const googleApiKey = secret("GoogleAPIKey");
+export const getGoogleApiKey = secret("GoogleAPIKey");
 
 export async function generateChatResponse(
   userMessage: string,
   searchResults: SearchResult[]
 ): Promise<string> {
-  const genAI = new GoogleGenerativeAI(googleApiKey());
+  const genAI = new GoogleGenerativeAI(getGoogleApiKey());
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
 
   const context = searchResults
@@ -51,7 +51,7 @@ FORMATO DE RESPUESTA:
 }
 
 export async function getEmbeddings(text: string): Promise<number[]> {
-  const genAI = new GoogleGenerativeAI(googleApiKey());
+  const genAI = new GoogleGenerativeAI(getGoogleApiKey());
   const model = genAI.getGenerativeModel({ model: "embedding-001" });
 
   const result = await model.embedContent(text);

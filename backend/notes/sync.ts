@@ -4,8 +4,8 @@ import { Pinecone } from '@pinecone-database/pinecone';
 import { getEmbeddings as generateEmbedding } from "../ai";
 import { secret } from "encore.dev/config";
 
-const pineconeKey = secret("PineconeAPIKey");
-const pineconeIndex = secret("PineconeIndexName");
+const getPineconeKey = secret("PineconeAPIKey");
+const getPineconeIndex = secret("PineconeIndexName");
 
 interface SyncResponse {
   synced: number;
@@ -16,9 +16,9 @@ export const syncToPinecone = api<void, SyncResponse>(
   { expose: true, method: "POST", path: "/notes/sync-pinecone" },
   async () => {
     const pc = new Pinecone({
-      apiKey: pineconeKey()
+      apiKey: getPineconeKey()
     });
-    const index = pc.index(pineconeIndex());
+    const index = pc.index(getPineconeIndex());
     
     const notes = await db.queryAll<{
       id: number;
