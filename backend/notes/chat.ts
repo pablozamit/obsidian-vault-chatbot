@@ -1,8 +1,8 @@
 import { api } from "encore.dev/api";
-import { ChatRequest, ChatResponse } from "./types.js";
-// CORRECCIÓN: Se usa el alias de ruta '~backend/'
-import { search } from "~backend/notes/search.js";
-import { generateChatResponse } from "~backend/ai.js";
+import { ChatRequest, ChatResponse } from "./types";
+// CORRECCIÓN: Rutas de importación relativas y sin extensión
+import { search } from "./search";
+import { generateChatResponse } from "../ai";
 import { v4 as uuidv4 } from "uuid";
 
 export const chat = api<ChatRequest, ChatResponse>(
