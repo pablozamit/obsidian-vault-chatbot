@@ -1,7 +1,7 @@
 import { api } from "encore.dev/api";
 import db from "../external_dbs/postgres/db";
 import { Pinecone } from '@pinecone-database/pinecone';
-import { generateEmbedding } from "./embedding";
+import { getEmbeddings as generateEmbedding } from "../ai";
 import { secret } from "encore.dev/config";
 
 const pineconeKey = secret("PineconeAPIKey");

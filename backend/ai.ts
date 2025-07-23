@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { secret } from "encore.dev/config";
-import { SearchResult } from "./types";
+import { SearchResult } from "./notes/types";
 
 const googleApiKey = secret("GoogleAPIKey");
 
