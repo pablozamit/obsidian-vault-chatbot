@@ -1,11 +1,9 @@
 import { api } from "encore.dev/api";
 import { Query } from "encore.dev/api";
-// Se eliminó la importación de la base de datos 'db' que causaba el error.
 import { Note } from "./types";
 
 // --- CONFIGURACIÓN GLOBAL DE CORS ---
-// Esto se aplica a TODA tu aplicación (chat, search, etc.) y soluciona el error
-// "Access-Control-Allow-Origin" que estás viendo.
+// Esto se aplica a TODA tu aplicación (chat, search, etc.)
 api.cors(
   "https://obsidian-vault-chatbot-frontend.vercel.app",
   {
@@ -28,11 +26,8 @@ interface ListNotesResponse {
 export const list = api<ListNotesRequest, ListNotesResponse>(
   { expose: true, method: "GET", path: "/notes" },
   async (req) => {
-    // El código original que intentaba usar una base de datos SQL ha sido eliminado.
-    // Esta es una respuesta temporal para evitar que la aplicación falle.
-    // Si necesitas listar notas, deberás implementar la lógica para obtenerlas desde Pinecone.
+    // Respuesta segura para evitar que la aplicación falle.
     console.log("Endpoint /notes/list llamado, devolviendo respuesta vacía.");
-
     return {
       notes: [],
       total: 0
