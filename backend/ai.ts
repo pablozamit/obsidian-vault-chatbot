@@ -49,3 +49,11 @@ FORMATO DE RESPUESTA:
   const result = await chat.sendMessage(userMessage);
   return result.response.text();
 }
+
+export async function getEmbeddings(text: string): Promise<number[]> {
+  const genAI = new GoogleGenerativeAI(googleApiKey());
+  const model = genAI.getGenerativeModel({ model: "embedding-001" });
+
+  const result = await model.embedContent(text);
+  return result.embedding.values;
+}
