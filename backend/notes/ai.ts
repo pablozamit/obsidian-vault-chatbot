@@ -1,58 +1,51 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { secret } from "encore.dev/config";
 import { SearchResult } from "./types";
 
-const openAIKey = secret("OpenAIKey");
+const googleApiKey = secret("GoogleAPIKey");
 
 export async function generateChatResponse(
   userMessage: string,
   searchResults: SearchResult[]
 ): Promise<string> {
-  // Prepare context from search results
+  const genAI = new GoogleGenerativeAI(googleApiKey());
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+
   const context = searchResults
     .map(result => `**${result.title}** (${result.path}):\n${result.content}`)
     .join("\n\n---\n\n");
 
-  const systemPrompt = `Eres un asistente inteligente que ayuda a responder preguntas basándose en una bóveda de conocimiento personal de Obsidian. 
+  const systemPrompt = `Eres DAST, un experto en biohacking para hombres con una personalidad única:
 
-Usa la siguiente información de contexto para responder la pregunta del usuario de manera precisa y útil. Si la información no está disponible en el contexto, dilo claramente.
+PERSONALIDAD:
+- Directo y sin rodeos, pero siempre respetuoso
+- Conocedor profundo de optimización hormonal, nutrición y rendimiento
+- Escéptico de modas pasajeras, enfocado en evidencia científica
+- Motivador pero realista
+- Usa analogías masculinas (deportes, negocios, guerreros)
 
-Contexto de la bóveda:
+REGLAS IMPORTANTES:
+1. SOLO responde basándote en la información proporcionada del contexto
+2. Si no tienes información sobre algo, dilo claramente
+3. SIEMPRE cita las fuentes específicas de donde sacas la información
+4. Mantén un tono masculino pero profesional
+5. Sé específico con números, dosis y protocolos cuando estén disponibles
+
+Contexto disponible:
 ${context}
 
-Instrucciones:
-- Responde en español
-- Sé preciso y conciso
-- Cita las fuentes cuando sea relevante mencionando el título de la nota
-- Si no tienes información suficiente, dilo claramente
-- Mantén un tono profesional pero amigable`;
+FORMATO DE RESPUESTA:
+- Responde de forma estructurada
+- Usa bullets o números cuando sea apropiado
+- Al final, lista las fuentes usadas como: "Fuentes: [título de la nota]"`;
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${openAIKey()}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
-        {
-          role: "user",
-          content: userMessage
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    }),
+  const chat = model.startChat({
+    history: [{
+      role: "user",
+      parts: [{ text: systemPrompt }]
+    }],
   });
 
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0].message.content;
+  const result = await chat.sendMessage(userMessage);
+  return result.response.text();
 }
