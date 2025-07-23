@@ -1,10 +1,9 @@
 import { api } from "encore.dev/api";
-import { SearchNotesRequest, SearchNotesResponse } from "./types";
-// CORRECCIÓN: Se añade ".js" a las rutas de importación
-import { getPineconeClient } from "../pinecone.js";
-import { getEmbeddings } from "../ai.js";
+import { SearchNotesRequest, SearchNotesResponse } from "./types.js";
+// CORRECCIÓN: Se usa el alias de ruta '~backend/'
+import { getPineconeClient } from "~backend/pinecone.js";
+import { getEmbeddings } from "~backend/ai.js";
 
-// Searches for notes using semantic search.
 export const search = api<SearchNotesRequest, SearchNotesResponse>(
   { expose: true, method: "POST", path: "/notes/search" },
   async (req) => {
