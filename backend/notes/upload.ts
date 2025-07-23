@@ -1,8 +1,8 @@
 import { api } from "encore.dev/api";
-// CORRECCIÓN: Se usa el alias de ruta '~backend/'
-import { getPineconeClient } from "~backend/pinecone.js";
-import { getEmbeddings } from "~backend/ai.js";
-import { UploadNotesRequest, UploadNotesResponse } from "./types.js";
+// CORRECCIÓN: Rutas de importación relativas y sin extensión
+import { getPineconeClient } from "../pinecone";
+import { getEmbeddings } from "../ai";
+import { UploadNotesRequest, UploadNotesResponse } from "./types";
 
 export const upload = api<UploadNotesRequest, UploadNotesResponse>(
   { expose: true, method: "POST", path: "/notes/upload" },
