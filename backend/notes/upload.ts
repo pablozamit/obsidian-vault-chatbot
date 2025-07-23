@@ -1,10 +1,8 @@
 import { api } from "encore.dev/api";
-// Se eliminó la importación de la base de datos que causaba el error.
 import { getPineconeClient } from "../pinecone";
 import { getEmbeddings } from "../ai";
 import { UploadNotesRequest, UploadNotesResponse } from "./types";
 
-// Processes requests to upload and index notes.
 export const upload = api<UploadNotesRequest, UploadNotesResponse>(
   { expose: true, method: "POST", path: "/notes/upload" },
   async (req) => {
