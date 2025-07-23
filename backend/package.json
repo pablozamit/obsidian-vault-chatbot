@@ -4,14 +4,17 @@
   "type": "module",
   "packageManager": "bun",
   "scripts": {
-    "build": "cd ../frontend \u0026\u0026 bun install \u0026\u0026 vite build --outDir=../backend/frontend/dist"
+    "build": "cd ../frontend && bun install && vite build --outDir=../backend/frontend/dist"
   },
   "dependencies": {
     "encore.dev": "^1.48.8",
     "uuid": "^9.0.1",
-    "googleapis": "^130.0.0"
+    "googleapis": "^130.0.0",
+    "@google/generative-ai": "^0.21.0",
+    "@pinecone-database/pinecone": "^4.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@types/node": "^22.0.0"
   }
 }
