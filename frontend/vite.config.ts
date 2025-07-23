@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -14,7 +15,7 @@ export default defineConfig({
     tailwindcss(),
     react(),
   ],
-  mode: "development",
+  // La línea 'mode: "development",' ha sido eliminada.
   build: {
     minify: false,
   }
