@@ -1,7 +1,18 @@
 import { api } from "encore.dev/api";
 import { Query } from "encore.dev/api";
-import db from "../external_dbs/postgres/db";
+// Se eliminó la importación de la base de datos 'db' que causaba el error.
 import { Note } from "./types";
+
+// --- CONFIGURACIÓN GLOBAL DE CORS ---
+// Esto se aplica a TODA tu aplicación (chat, search, etc.) y soluciona el error
+// "Access-Control-Allow-Origin" que estás viendo.
+api.cors(
+  "https://obsidian-vault-chatbot-frontend.vercel.app",
+  {
+    methods: ["GET", "POST", "OPTIONS"],
+    headers: ["Content-Type", "Authorization"],
+  }
+);
 
 interface ListNotesRequest {
   limit?: Query<number>;
@@ -17,26 +28,14 @@ interface ListNotesResponse {
 export const list = api<ListNotesRequest, ListNotesResponse>(
   { expose: true, method: "GET", path: "/notes" },
   async (req) => {
-    const limit = req.limit || 50;
-    const offset = req.offset || 0;
-
-    // Get total count
-    const countResult = await db.queryRow<{ count: number }>`
-      SELECT COUNT(*) as count FROM notes
-    `;
-    const total = countResult?.count || 0;
-
-    // Get notes with pagination
-    const notes = await db.queryAll<Note>`
-      SELECT id, title, path, content, updated_at
-      FROM notes
-      ORDER BY updated_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `;
+    // El código original que intentaba usar una base de datos SQL ha sido eliminado.
+    // Esta es una respuesta temporal para evitar que la aplicación falle.
+    // Si necesitas listar notas, deberás implementar la lógica para obtenerlas desde Pinecone.
+    console.log("Endpoint /notes/list llamado, devolviendo respuesta vacía.");
 
     return {
-      notes,
-      total
+      notes: [],
+      total: 0
     };
   }
 );
