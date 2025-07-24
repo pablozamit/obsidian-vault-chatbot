@@ -4,19 +4,9 @@ import { getPineconeClient } from "./pinecone";
 import { getEmbeddings } from "./ai";
 import db from "../external_dbs/postgres/db";
 
-export const upload = api(
-  {
-    expose: true,
-    method: "POST",
-    path: "/notes/upload",
-    cors: {
-      allowOrigins: ["https://obsidian-vault-chatbot-frontend.vercel.app"],
-      allowCredentials: true,
-      allowHeaders: ["Content-Type"],
-      allowMethods: ["POST", "OPTIONS"]
-    }
-  },
-  async (req: UploadNotesRequest): Promise<UploadNotesResponse> => {
+export const upload = api<UploadNotesRequest, UploadNotesResponse>(
+  { expose: true, method: "POST", path: "/notes/upload" },
+  async (req) => {
     const { index } = await getPineconeClient();
     const errors: string[] = [];
     let processedCount = 0;

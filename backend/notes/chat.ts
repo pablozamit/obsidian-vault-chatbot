@@ -4,19 +4,9 @@ import { search } from "./search";
 import { generateChatResponse } from "./ai";
 import { v4 as uuidv4 } from "uuid";
 
-export const chat = api(
-  {
-    expose: true,
-    method: "POST",
-    path: "/notes/chat",
-    cors: {
-      allowOrigins: ["https://obsidian-vault-chatbot-frontend.vercel.app"],
-      allowCredentials: true,
-      allowHeaders: ["Content-Type"],
-      allowMethods: ["POST", "OPTIONS"]
-    }
-  },
-  async (req: ChatRequest): Promise<ChatResponse> => {
+export const chat = api<ChatRequest, ChatResponse>(
+  { expose: true, method: "POST", path: "/notes/chat" },
+  async (req) => {
     const conversationId = req.conversation_id || uuidv4();
 
     const searchResults = await search({
