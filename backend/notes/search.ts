@@ -2,7 +2,7 @@
 import { api } from "encore.dev/api";
 import { SearchNotesRequest, SearchNotesResponse, SearchResult } from "./types";
 import { getPineconeClient } from "../pinecone"; // Importación corregida
-import { getEmbeddings } from "../ai";
+import { getEmbeddings } from "./ai"; // CAMBIADO: de "../ai" a "./ai"
 
 export const search = api<SearchNotesRequest, SearchNotesResponse>(
   { expose: true, method: "POST", path: "/notes/search" },
