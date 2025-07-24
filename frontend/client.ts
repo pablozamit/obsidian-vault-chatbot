@@ -847,4 +847,4 @@ export enum ErrCode {
     Unauthenticated = "unauthenticated",
 }
 
-export default new Client("https://obsidian-vault-chatbot-nk6i.encr.app", { requestInit: { credentials: "include" } });
+export default new Client(import.meta.env.VITE_CLIENT_TARGET as string, { requestInit: { credentials: "include" } });
