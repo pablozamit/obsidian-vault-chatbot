@@ -847,4 +847,9 @@ export enum ErrCode {
     Unauthenticated = "unauthenticated",
 }
 
-export default new Client(import.meta.env.VITE_CLIENT_TARGET as string, { requestInit: { credentials: "include" } });
+// Usar proxy en producción
+const baseURL = typeof window !== 'undefined' && window.location.hostname === 'obsidian-vault-chatbot-frontend.vercel.app'
+  ? '/api/proxy'
+  : (import.meta.env.VITE_CLIENT_TARGET as string);
+
+export default new Client(baseURL, { requestInit: { credentials: "include" } });
