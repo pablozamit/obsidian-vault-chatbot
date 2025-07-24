@@ -1,13 +1,11 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { secret } from "encore.dev/config";
-import { SearchResult } from "./notes/types";
+import { SearchResult } from "./types";
 
-// Define el secreto globalmente (sin llamarlo)
 const getApiKey = secret("GoogleAPIKey");
 
 // getEmbeddings usa la IA de Google para generar embeddings.
 export async function getEmbeddings(text: string): Promise<number[]> {
-    // Llama al secreto dentro de la función
     const apiKey = getApiKey();
     
     if (!apiKey) {
@@ -22,7 +20,6 @@ export async function getEmbeddings(text: string): Promise<number[]> {
 
 // generateChatResponse genera una respuesta de chat.
 export async function generateChatResponse(message: string, sources: SearchResult[]): Promise<string> {
-    // Llama al secreto dentro de la función
     const apiKey = getApiKey();
     
     if (!apiKey) {
