@@ -847,9 +847,7 @@ export enum ErrCode {
     Unauthenticated = "unauthenticated",
 }
 
-// Usar proxy CORS público para evitar problemas
-const baseURL = typeof window !== 'undefined' && window.location.hostname === 'obsidian-vault-chatbot-frontend.vercel.app'
-  ? 'https://corsproxy.io/?https://obsidian-vault-chatbot-nk6i.encr.app'
-  : (import.meta.env.VITE_CLIENT_TARGET as string);
+// URL del backend (puesta en la env var VITE_API_BASE)
+const baseURL = import.meta.env.VITE_API_BASE as string;
+export default new Client(baseURL);      // sin credentials, sin proxy
 
-export default new Client(baseURL, { requestInit: { credentials: "include" } });
