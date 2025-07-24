@@ -1,46 +1,60 @@
 import { api } from "encore.dev/api";
-import { SearchNotesRequest, SearchNotesResponse, SearchResult } from "./types";
+import {
+  SearchNotesRequest,
+  SearchNotesResponse,
+  SearchResult,
+} from "./types";
 import { getPineconeClient } from "./pinecone";
 import { getEmbeddings } from "./ai";
 
+/**
+ * Realiza búsqueda semántica en el índice de Pinecone y devuelve
+ * las notas más relevantes según el umbral indicado.
+ */
 export const search = api<SearchNotesRequest, SearchNotesResponse>(
   { expose: true, method: "POST", path: "/notes/search" },
   async (req) => {
-    // --- INICIO DE LA MODIFICACIÓN PARA DEBUGGING ---
-    console.log("🔍 query=", req.query);
-    console.log("🔍 topK=", req.limit || 10, "threshold=", req.threshold || 0);
-    // --- FIN DE LA MODIFICACIÓN ---
+    //------------------------------------------------------------------
+    // 1) Parámetros de búsqueda con valores por defecto
+    //------------------------------------------------------------------
+    const topK = req.limit ?? 10;          // máximo de coincidencias
+    const threshold = req.threshold ?? 0;  // puntuación mínima
 
+    //------------------------------------------------------------------
+    // 2) Conexión a Pinecone
+    //------------------------------------------------------------------
     const { index } = await getPineconeClient();
-    const queryEmbedding = await getEmbeddings(req.query);
-    
-    // --- INICIO DE LA MODIFICACIÓN PARA DEBUGGING ---
-    console.log("🔍 query embedding dim=", queryEmbedding.length);
-    // --- FIN DE LA MODIFICACIÓN ---
 
-    const searchResults = await index.query({
-      topK: req.limit || 10,
+    //------------------------------------------------------------------
+    // 3) Embedding de la consulta con el modelo “embedding‑001”
+    //------------------------------------------------------------------
+    const queryEmbedding = await getEmbeddings(req.query);
+
+    //------------------------------------------------------------------
+    // 4) Consulta al índice
+    //------------------------------------------------------------------
+    const { matches } = await index.query({
       vector: queryEmbedding,
+      topK,
       includeMetadata: true,
     });
-    
-    // --- INICIO DE LA MODIFICACIÓN PARA DEBUGGING ---
-    console.log("🔍 pinecone raw=", JSON.stringify(searchResults, null, 2));
-    // --- FIN DE LA MODIFICACIÓN ---
 
-    const results: SearchResult[] = searchResults.matches
-      .filter(match => (match.score || 0) >= (req.threshold || 0))
-      .map((match: any) => ({
-        id: parseInt(match.id, 10),
-        title: match.metadata?.title as string,
-        path: match.metadata?.path as string,
-        content: match.metadata?.content as string,
-        similarity: match.score,
-        updated_at: match.metadata?.updated_at as number,
+    //------------------------------------------------------------------
+    // 5) Conversión de resultados → nuestro tipo SearchResult
+    //------------------------------------------------------------------
+    const results: SearchResult[] = (matches ?? [])
+      .filter((m) => (m.score ?? 0) >= threshold)
+      .map((m) => ({
+        // ID puede incluir guiones/barras bajas, así que lo dejamos como string
+        id: m.id,
+        title: (m.metadata?.source as string) ?? "",
+        path: (m.metadata?.source as string) ?? "",
+        content: (m.metadata?.text as string) ?? "",
+        similarity: m.score ?? 0,
+        // Si añadiste otros metadatos (p. ej. updated_at) inclúyelos aquí
+        updated_at: m.metadata?.updated_at as number | undefined,
       }));
 
-    return {
-      results,
-    };
+    return { results };
   }
 );
