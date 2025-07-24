@@ -852,4 +852,9 @@ const baseURL = typeof window !== 'undefined' && window.location.hostname === 'o
   ? '/api/proxy'
   : (import.meta.env.VITE_CLIENT_TARGET as string);
 
+// Usar proxy CORS público para evitar problemas
+const baseURL = typeof window !== 'undefined' && window.location.hostname === 'obsidian-vault-chatbot-frontend.vercel.app'
+  ? 'https://corsproxy.io/?https://obsidian-vault-chatbot-nk6i.encr.app'
+  : (import.meta.env.VITE_CLIENT_TARGET as string);
+
 export default new Client(baseURL, { requestInit: { credentials: "include" } });
