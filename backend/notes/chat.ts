@@ -1,7 +1,4 @@
 // backend/notes/chat.ts
-// Maneja el endpoint POST /notes/chat
-// Devuelve una respuesta de IA basada en la búsqueda semántica sobre las notas.
-
 import { api } from "encore.dev/api";
 import { ChatRequest, ChatResponse } from "./types";
 import { search } from "./search";
@@ -9,19 +6,31 @@ import { generateChatResponse } from "./ai";
 import { v4 as uuidv4 } from "uuid";
 
 /**
- * Limpia cualquier número no finito (NaN, Infinity) dentro de los
- * resultados de búsqueda antes de enviarlos al cliente.
+ * Quita toda propiedad numérica no‑finita en cualquier profundidad
+ * y – de paso – elimina el campo similarity/score (no lo necesita el cliente).
  */
-function sanitizeSources<T extends Record<string, any>>(sources: T[]): T[] {
-  return sources.map((src) => {
-    const cleaned: Record<string, any> = { ...src };
-    for (const key in cleaned) {
-      if (typeof cleaned[key] === "number" && !Number.isFinite(cleaned[key])) {
-        cleaned[key] = 0; // o elimínalo si no necesitas el valor
+function stripUnsafeNumbers<T>(obj: T): T {
+  if (Array.isArray(obj)) {
+    return obj.map(stripUnsafeNumbers) as any;
+  }
+  if (obj !== null && typeof obj === "object") {
+    const clean: Record<string, any> = {};
+    for (const k in obj) {
+      const v = (obj as any)[k];
+      if (typeof v === "number") {
+        if (Number.isFinite(v)) clean[k] = v; // solo números válidos
+        // números no finitos se descartan
+      } else if (typeof v === "object") {
+        // recursivo
+        const nested = stripUnsafeNumbers(v);
+        if (Object.keys(nested).length) clean[k] = nested;
+      } else {
+        clean[k] = v;
       }
     }
-    return cleaned as T;
-  });
+    return clean as any;
+  }
+  return obj;
 }
 
 export const chat = api<ChatRequest, ChatResponse>(
@@ -31,18 +40,30 @@ export const chat = api<ChatRequest, ChatResponse>(
     path: "/notes/chat",
   },
   async (req) => {
-    // 1. Identificador de conversación (nuevo o reutilizado)
     const conversation_id = req.conversation_id || uuidv4();
 
-    // 2. Búsqueda semántica en las notas
     const { results } = await search({
       query: req.message,
       limit: 5,
       threshold: 0.6,
     });
 
-    // 3. Generar respuesta con el modelo de IA
     const response = await generateChatResponse(req.message, results);
 
-    // 4. Limpiar posibles NaN/Infinity en los scores de similarity, etc.
-    const safeSources =
+    // limpia números no válidos y quita scores
+    const safeSources = stripUnsafeNumbers(
+      results.map(({ id, title, path, content }) => ({
+        id,
+        title,
+        path,
+        snippet: content.slice(0, 200), // opcional – previsualización
+      }))
+    );
+
+    return {
+      response,
+      conversation_id,
+      sources: safeSources,
+    };
+  }
+);
