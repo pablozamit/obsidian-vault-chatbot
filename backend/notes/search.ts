@@ -15,8 +15,14 @@ export const search = api<SearchNotesRequest, SearchNotesResponse>(
       includeMetadata: true,
     });
 
+    // --- INICIO DE LA MODIFICACIÓN PARA DEBUGGING ---
+    // Imprimimos en los logs de Encore los resultados crudos que devuelve Pinecone.
+    // Esto nos permitirá ver las puntuaciones de similitud reales antes de aplicar el filtro.
+    console.log("Resultados crudos de Pinecone:", JSON.stringify(searchResults.matches, null, 2));
+    // --- FIN DE LA MODIFICACIÓN ---
+
     const results: SearchResult[] = searchResults.matches
-      .filter(match => (match.score || 0) >= (req.threshold || 0))
+      .filter(match => (match.score || 0) >= (req.threshold || 0)) // El filtro se mantiene, pero ahora podemos ver por qué falla.
       .map((match: any) => ({
         id: parseInt(match.id, 10),
         title: match.metadata?.title as string,
