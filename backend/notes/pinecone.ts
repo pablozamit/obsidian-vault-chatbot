@@ -1,4 +1,4 @@
-// backend/pinecone.ts
+// backend/notes/pinecone.ts
 import { Pinecone } from "@pinecone-database/pinecone";
 import { secret } from "encore.dev/config";
 
@@ -28,7 +28,7 @@ export const getPineconeClient = async () => {
     if (!indexName) {
         throw new Error("El secreto PineconeIndexName no está definido.");
     }
-    
+
     pineconeIndex = pinecone.index(indexName);
 
     return { pinecone, index: pineconeIndex };
