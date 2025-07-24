@@ -2,7 +2,7 @@
 import { api } from "encore.dev/api";
 import { ChatRequest, ChatResponse } from "./types";
 import { search } from "./search"; // Importación corregida
-import { generateChatResponse } from "../ai";
+import { generateChatResponse } from "./ai"; // CAMBIADO: de "../ai" a "./ai"
 import { v4 as uuidv4 } from "uuid";
 
 export const chat = api<ChatRequest, ChatResponse>(
