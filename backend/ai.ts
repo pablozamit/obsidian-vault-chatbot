@@ -2,45 +2,31 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/ge
 import { secret } from "encore.dev/config";
 import { SearchResult } from "./notes/types";
 
-// 1. DEFINIR el getter del secreto a nivel global
-const getGoogleApiKey = secret("GoogleAPIKey");
-
-let genAI: GoogleGenerativeAI | null = null;
-
-// getGenAIClient inicializa el cliente de IA si no existe
-const getGenAIClient = () => {
-    if (genAI) {
-        return genAI;
-    }
-    
-    // 2. OBTENER el valor del secreto llamando al getter DENTRO de la función
-    const apiKey = getGoogleApiKey(); 
-    if (!apiKey) {
-        throw new Error("El secreto GoogleAPIKey no está definido o no se pudo cargar.");
-    }
-
-    genAI = new GoogleGenerativeAI(apiKey);
-    return genAI;
-};
+// NO definir el secreto aquí.
 
 // getEmbeddings usa la IA de Google para generar embeddings.
 export async function getEmbeddings(text: string): Promise<number[]> {
-    const client = getGenAIClient();
-    const model = client.getGenerativeModel({ model: "embedding-001" });
+    // Obtener la clave DENTRO de la función
+    const apiKey = secret("GoogleAPIKey")();
+    if (!apiKey) throw new Error("GoogleAPIKey secret not found");
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "embedding-001" });
     const result = await model.embedContent(text);
     return result.embedding.values;
 }
 
 // generateChatResponse genera una respuesta de chat.
 export async function generateChatResponse(message: string, sources: SearchResult[]): Promise<string> {
-    const client = getGenAIClient();
-    const model = client.getGenerativeModel({
+    // Obtener la clave DENTRO de la función
+    const apiKey = secret("GoogleAPIKey")();
+    if (!apiKey) throw new Error("GoogleAPIKey secret not found");
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
         model: "gemini-1.5-flash",
         safetySettings: [
-            {
-                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
         ],
     });
 

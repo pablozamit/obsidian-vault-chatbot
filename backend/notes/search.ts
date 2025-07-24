@@ -24,7 +24,9 @@ export const search = api<SearchNotesRequest, SearchNotesResponse>(
         title: match.metadata?.title as string,
         path: match.metadata?.path as string,
         content: match.metadata?.content as string,
+        // Usar 'similarity' y asegurar que 'updated_at' exista o se omita si no está en los metadatos
         similarity: match.score,
+        updated_at: match.metadata?.updated_at as number,
       }));
 
     return {

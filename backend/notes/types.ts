@@ -30,7 +30,8 @@ export interface SearchResult {
   title: string;
   path: string;
   content: string;
-  similarity: number;
+  similarity: number; // Renombrado de 'score' para consistencia
+  updated_at: number;  // Añadido campo faltante
 }
 
 export interface SearchNotesResponse {
