@@ -1,14 +1,14 @@
+// backend/notes/search.ts
 import { api } from "encore.dev/api";
-import { SearchNotesRequest, SearchNotesResponse } from "./types";
-// CORRECCIÓN: Rutas de importación relativas y sin extensión
-import { getPineconeClient } from "../pinecone";
+import { SearchNotesRequest, SearchNotesResponse, SearchResult } from "./types";
+import { getPineconeClient } from "../pinecone"; // Importación corregida
 import { getEmbeddings } from "../ai";
 
 export const search = api<SearchNotesRequest, SearchNotesResponse>(
   { expose: true, method: "POST", path: "/notes/search" },
   async (req) => {
-    const pinecone = await getPineconeClient();
-    const index = pinecone.index(process.env.PINECONE_INDEX_NAME!);
+    // Obtener el índice directamente desde el cliente corregido
+    const { index } = await getPineconeClient();
     const queryEmbedding = await getEmbeddings(req.query);
 
     const searchResults = await index.query({
@@ -17,15 +17,18 @@ export const search = api<SearchNotesRequest, SearchNotesResponse>(
       includeMetadata: true,
     });
 
-    return {
-      results: searchResults.matches.map((match) => ({
-        id: match.id,
+    const results: SearchResult[] = searchResults.matches
+      .filter(match => (match.score || 0) >= (req.threshold || 0))
+      .map((match: any) => ({
+        id: parseInt(match.id, 10),
         title: match.metadata?.title as string,
         path: match.metadata?.path as string,
         content: match.metadata?.content as string,
-        updated_at: match.metadata?.updated_at as number,
-        score: match.score,
-      })),
+        similarity: match.score,
+      }));
+
+    return {
+      results,
     };
   }
 );
