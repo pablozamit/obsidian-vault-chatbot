@@ -2,25 +2,28 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/ge
 import { secret } from "encore.dev/config";
 import { SearchResult } from "./notes/types";
 
-// NO inicializar el secreto aquí.
-// const getGoogleApiKey = secret("GoogleAPIKey"); // ESTO ES INCORRECTO
+// 1. DEFINIR el getter del secreto a nivel global
+const getGoogleApiKey = secret("GoogleAPIKey");
 
 let genAI: GoogleGenerativeAI | null = null;
 
+// getGenAIClient inicializa el cliente de IA si no existe
 const getGenAIClient = () => {
     if (genAI) {
         return genAI;
     }
-    // Cargar el secreto DENTRO de la función
-    const apiKey = secret("GoogleAPIKey")(); 
+    
+    // 2. OBTENER el valor del secreto llamando al getter DENTRO de la función
+    const apiKey = getGoogleApiKey(); 
     if (!apiKey) {
-        throw new Error("El secreto GoogleAPIKey no está definido.");
+        throw new Error("El secreto GoogleAPIKey no está definido o no se pudo cargar.");
     }
+
     genAI = new GoogleGenerativeAI(apiKey);
     return genAI;
 };
 
-// getEmbeddings uses Google's AI to generate embeddings for a given text.
+// getEmbeddings usa la IA de Google para generar embeddings.
 export async function getEmbeddings(text: string): Promise<number[]> {
     const client = getGenAIClient();
     const model = client.getGenerativeModel({ model: "embedding-001" });
@@ -28,7 +31,7 @@ export async function getEmbeddings(text: string): Promise<number[]> {
     return result.embedding.values;
 }
 
-// generateChatResponse generates a chat response based on a user's message and search results.
+// generateChatResponse genera una respuesta de chat.
 export async function generateChatResponse(message: string, sources: SearchResult[]): Promise<string> {
     const client = getGenAIClient();
     const model = client.getGenerativeModel({
