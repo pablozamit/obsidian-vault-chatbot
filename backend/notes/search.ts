@@ -7,6 +7,9 @@ export const search = api<SearchRequest, SearchResponse>({
   cors: {
     allowOrigins: ["https://obsidian-vault-chatbot-frontend.vercel.app"],
     allowCredentials: true,
+    // 👇  exact literal que llega en el pre‑flight
+    allowHeaders: ["content-type"],
+    allowMethods: ["POST", "OPTIONS"]
   },
 })(async ({ query }) => {
   /* … */
