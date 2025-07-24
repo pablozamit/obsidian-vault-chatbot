@@ -1,4 +1,7 @@
 {
+  "outputDirectory": "frontend/dist",
+  "buildCommand": "cd frontend && npm run build",
+  "installCommand": "cd frontend && npm install",
   "functions": {
     "api/proxy/[...path].js": {
       "maxDuration": 30
@@ -8,10 +11,6 @@
     {
       "source": "/api/:path*",
       "destination": "/api/:path*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/$1"
     }
   ]
 }
