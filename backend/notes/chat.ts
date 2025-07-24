@@ -1,27 +1,14 @@
-// backend/notes/chat.ts
-import { api } from "encore.dev/api";
-import { ChatRequest, ChatResponse } from "./types";
-import { search } from "./search"; // Importación corregida
-import { generateChatResponse } from "./ai"; // CAMBIADO: de "../ai" a "./ai"
-import { v4 as uuidv4 } from "uuid";
+import { api } from "@encore.dev";
+import type { ChatRequest, ChatResponse } from "../types";
 
-export const chat = api<ChatRequest, ChatResponse>(
-  { expose: true, method: "POST", path: "/notes/chat" },
-  async (req) => {
-    const conversationId = req.conversation_id || uuidv4();
-
-    const searchResults = await search({
-      query: req.message,
-      limit: 5,
-      threshold: 0.6
-    });
-
-    const responseText = await generateChatResponse(req.message, searchResults.results);
-
-    return {
-      response: responseText,
-      conversation_id: conversationId,
-      sources: searchResults.results
-    };
-  }
-);
+export const chat = api<ChatRequest, ChatResponse>({
+  path: "/notes/chat",
+  method: "POST",
+  // 👇 CORS exacto para tu frontend
+  cors: {
+    allowOrigins: ["https://obsidian-vault-chatbot-frontend.vercel.app"],
+    allowCredentials: true,
+  },
+})(async ({ message }) => {
+  /* … tu lógica … */
+});
