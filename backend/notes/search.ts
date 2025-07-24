@@ -3,19 +3,9 @@ import { SearchNotesRequest, SearchNotesResponse, SearchResult } from "./types";
 import { getPineconeClient } from "./pinecone";
 import { getEmbeddings } from "./ai";
 
-export const search = api(
-  {
-    expose: true,
-    method: "POST",
-    path: "/notes/search",
-    cors: {
-      allowOrigins: ["https://obsidian-vault-chatbot-frontend.vercel.app"],
-      allowCredentials: true,
-      allowHeaders: ["Content-Type"],
-      allowMethods: ["POST", "OPTIONS"]
-    }
-  },
-  async (req: SearchNotesRequest): Promise<SearchNotesResponse> => {
+export const search = api<SearchNotesRequest, SearchNotesResponse>(
+  { expose: true, method: "POST", path: "/notes/search" },
+  async (req) => {
     const { index } = await getPineconeClient();
     const queryEmbedding = await getEmbeddings(req.query);
 
