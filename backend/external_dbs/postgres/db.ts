@@ -1,3 +1,4 @@
 import { SQLDatabase } from "encore.dev/storage/sqldb";
 
-export default new SQLDatabase("postgres", {});
+// Cambiamos "postgres" a "notesdb" para siempre.
+export default new SQLDatabase("notesdb", {migrations: "./migrations"});
