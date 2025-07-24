@@ -8,6 +8,9 @@ export const chat = api<ChatRequest, ChatResponse>({
   cors: {
     allowOrigins: ["https://obsidian-vault-chatbot-frontend.vercel.app"],
     allowCredentials: true,
+    // 👇  exact literal que llega en el pre‑flight
+    allowHeaders: ["content-type"],
+    allowMethods: ["POST", "OPTIONS"]
   },
 })(async ({ message }) => {
   /* … tu lógica … */
