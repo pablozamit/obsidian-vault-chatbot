@@ -1,7 +1,7 @@
+// backend/notes/chat.ts
 import { api } from "encore.dev/api";
 import { ChatRequest, ChatResponse } from "./types";
-// CORRECCIÓN: Rutas de importación relativas y sin extensión
-import { search } from "./search";
+import { search } from "./search"; // Importación corregida
 import { generateChatResponse } from "../ai";
 import { v4 as uuidv4 } from "uuid";
 
@@ -16,10 +16,10 @@ export const chat = api<ChatRequest, ChatResponse>(
       threshold: 0.6
     });
 
-    const response = await generateChatResponse(req.message, searchResults.results);
+    const responseText = await generateChatResponse(req.message, searchResults.results);
 
     return {
-      response,
+      response: responseText,
       conversation_id: conversationId,
       sources: searchResults.results
     };
