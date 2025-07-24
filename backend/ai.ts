@@ -1,59 +1,49 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { secret } from "encore.dev/config";
 import { SearchResult } from "./notes/types";
 
-export const getGoogleApiKey = secret("GoogleAPIKey");
+// NO inicializar el secreto aquí.
+// const getGoogleApiKey = secret("GoogleAPIKey"); // ESTO ES INCORRECTO
 
-export async function generateChatResponse(
-  userMessage: string,
-  searchResults: SearchResult[]
-): Promise<string> {
-  const genAI = new GoogleGenerativeAI(getGoogleApiKey());
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+let genAI: GoogleGenerativeAI | null = null;
 
-  const context = searchResults
-    .map(result => `**${result.title}** (${result.path}):\n${result.content}`)
-    .join("\n\n---\n\n");
+const getGenAIClient = () => {
+    if (genAI) {
+        return genAI;
+    }
+    // Cargar el secreto DENTRO de la función
+    const apiKey = secret("GoogleAPIKey")(); 
+    if (!apiKey) {
+        throw new Error("El secreto GoogleAPIKey no está definido.");
+    }
+    genAI = new GoogleGenerativeAI(apiKey);
+    return genAI;
+};
 
-  const systemPrompt = `Eres DAST, un experto en biohacking para hombres con una personalidad única:
-
-PERSONALIDAD:
-- Directo y sin rodeos, pero siempre respetuoso
-- Conocedor profundo de optimización hormonal, nutrición y rendimiento
-- Escéptico de modas pasajeras, enfocado en evidencia científica
-- Motivador pero realista
-- Usa analogías masculinas (deportes, negocios, guerreros)
-
-REGLAS IMPORTANTES:
-1. SOLO responde basándote en la información proporcionada del contexto
-2. Si no tienes información sobre algo, dilo claramente
-3. SIEMPRE cita las fuentes específicas de donde sacas la información
-4. Mantén un tono masculino pero profesional
-5. Sé específico con números, dosis y protocolos cuando estén disponibles
-
-Contexto disponible:
-${context}
-
-FORMATO DE RESPUESTA:
-- Responde de forma estructurada
-- Usa bullets o números cuando sea apropiado
-- Al final, lista las fuentes usadas como: "Fuentes: [título de la nota]"`;
-
-  const chat = model.startChat({
-    history: [{
-      role: "user",
-      parts: [{ text: systemPrompt }]
-    }],
-  });
-
-  const result = await chat.sendMessage(userMessage);
-  return result.response.text();
+// getEmbeddings uses Google's AI to generate embeddings for a given text.
+export async function getEmbeddings(text: string): Promise<number[]> {
+    const client = getGenAIClient();
+    const model = client.getGenerativeModel({ model: "embedding-001" });
+    const result = await model.embedContent(text);
+    return result.embedding.values;
 }
 
-export async function getEmbeddings(text: string): Promise<number[]> {
-  const genAI = new GoogleGenerativeAI(getGoogleApiKey());
-  const model = genAI.getGenerativeModel({ model: "embedding-001" });
+// generateChatResponse generates a chat response based on a user's message and search results.
+export async function generateChatResponse(message: string, sources: SearchResult[]): Promise<string> {
+    const client = getGenAIClient();
+    const model = client.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        safetySettings: [
+            {
+                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold: HarmBlockThreshold.BLOCK_NONE,
+            },
+        ],
+    });
 
-  const result = await model.embedContent(text);
-  return result.embedding.values;
+    const context = sources.map((item) => item.content).join("\n\n");
+    const prompt = `Contexto: ${context}\n\nPregunta: ${message}`;
+    const result = await model.generateContent(prompt);
+    
+    return result.response.text();
 }
