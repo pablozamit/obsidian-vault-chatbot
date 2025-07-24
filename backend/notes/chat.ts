@@ -5,40 +5,26 @@ import { search } from "./search";
 import { generateChatResponse } from "./ai";
 import { v4 as uuidv4 } from "uuid";
 
-/**
- * Quita toda propiedad numérica no‑finita en cualquier profundidad
- * y – de paso – elimina el campo similarity/score (no lo necesita el cliente).
- */
-function stripUnsafeNumbers<T>(obj: T): T {
-  if (Array.isArray(obj)) {
-    return obj.map(stripUnsafeNumbers) as any;
-  }
-  if (obj !== null && typeof obj === "object") {
-    const clean: Record<string, any> = {};
+/** Convierte cualquier valor no‑finito en 0 y omite fields vacíos  */
+function clean(obj: any): any {
+  if (Array.isArray(obj)) return obj.map(clean);
+  if (obj && typeof obj === "object") {
+    const out: Record<string, any> = {};
     for (const k in obj) {
-      const v = (obj as any)[k];
+      const v = obj[k];
       if (typeof v === "number") {
-        if (Number.isFinite(v)) clean[k] = v; // solo números válidos
-        // números no finitos se descartan
-      } else if (typeof v === "object") {
-        // recursivo
-        const nested = stripUnsafeNumbers(v);
-        if (Object.keys(nested).length) clean[k] = nested;
-      } else {
-        clean[k] = v;
+        if (Number.isFinite(v)) out[k] = v;
+      } else if (v !== undefined && v !== null) {
+        out[k] = clean(v);
       }
     }
-    return clean as any;
+    return out;
   }
   return obj;
 }
 
 export const chat = api<ChatRequest, ChatResponse>(
-  {
-    expose: true,
-    method: "POST",
-    path: "/notes/chat",
-  },
+  { expose: true, method: "POST", path: "/notes/chat" },
   async (req) => {
     const conversation_id = req.conversation_id || uuidv4();
 
@@ -50,20 +36,18 @@ export const chat = api<ChatRequest, ChatResponse>(
 
     const response = await generateChatResponse(req.message, results);
 
-    // limpia números no válidos y quita scores
-    const safeSources = stripUnsafeNumbers(
-      results.map(({ id, title, path, content }) => ({
-        id,
-        title,
-        path,
-        snippet: content.slice(0, 200), // opcional – previsualización
-      }))
-    );
+    // Construir fuentes seguras (sin content undefined)
+    const sources = results.map((r) => ({
+      id: r.id,
+      title: r.title,
+      path: r.path,
+      snippet: typeof r.content === "string" ? r.content.slice(0, 200) : "",
+    }));
 
     return {
       response,
       conversation_id,
-      sources: safeSources,
+      sources: clean(sources),
     };
   }
 );
