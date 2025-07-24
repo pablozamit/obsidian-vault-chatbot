@@ -6,23 +6,30 @@ import { getEmbeddings } from "./ai";
 export const search = api<SearchNotesRequest, SearchNotesResponse>(
   { expose: true, method: "POST", path: "/notes/search" },
   async (req) => {
+    // --- INICIO DE LA MODIFICACIÓN PARA DEBUGGING ---
+    console.log("🔍 query=", req.query);
+    console.log("🔍 topK=", req.limit || 10, "threshold=", req.threshold || 0);
+    // --- FIN DE LA MODIFICACIÓN ---
+
     const { index } = await getPineconeClient();
     const queryEmbedding = await getEmbeddings(req.query);
+    
+    // --- INICIO DE LA MODIFICACIÓN PARA DEBUGGING ---
+    console.log("🔍 query embedding dim=", queryEmbedding.length);
+    // --- FIN DE LA MODIFICACIÓN ---
 
     const searchResults = await index.query({
       topK: req.limit || 10,
       vector: queryEmbedding,
       includeMetadata: true,
     });
-
+    
     // --- INICIO DE LA MODIFICACIÓN PARA DEBUGGING ---
-    // Imprimimos en los logs de Encore los resultados crudos que devuelve Pinecone.
-    // Esto nos permitirá ver las puntuaciones de similitud reales antes de aplicar el filtro.
-    console.log("Resultados crudos de Pinecone:", JSON.stringify(searchResults.matches, null, 2));
+    console.log("🔍 pinecone raw=", JSON.stringify(searchResults, null, 2));
     // --- FIN DE LA MODIFICACIÓN ---
 
     const results: SearchResult[] = searchResults.matches
-      .filter(match => (match.score || 0) >= (req.threshold || 0)) // El filtro se mantiene, pero ahora podemos ver por qué falla.
+      .filter(match => (match.score || 0) >= (req.threshold || 0))
       .map((match: any) => ({
         id: parseInt(match.id, 10),
         title: match.metadata?.title as string,
