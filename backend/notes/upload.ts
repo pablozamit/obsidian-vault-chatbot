@@ -2,7 +2,7 @@
 import { api } from "encore.dev/api";
 import { UploadNotesRequest, UploadNotesResponse } from "./types";
 import { getPineconeClient } from "../pinecone"; // Importación corregida
-import { getEmbeddings } from "../ai";
+import { getEmbeddings } from "./ai"; // CAMBIADO: de "../ai" a "./ai"
 import db from "../external_dbs/postgres/db";
 
 export const upload = api<UploadNotesRequest, UploadNotesResponse>(
