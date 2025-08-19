@@ -1,18 +1,32 @@
+// frontend/pages/NoteViewerPage.tsx
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import backend from '~backend/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+const API_BASE = import.meta.env.VITE_API_BASE as string;
+
+type NoteResp = {
+  note: {
+    id: string;
+    title: string | null;
+    path: string;
+    content: string | null;
+    updated_at: string | null;
+  } | null;
+};
 
 export function NoteViewerPage() {
   const [searchParams] = useSearchParams();
   const path = searchParams.get('path') || '';
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<NoteResp | null>({
     queryKey: ['note', path],
     queryFn: async () => {
       if (!path) return null;
-      return await backend.notes.getByPath({ path });
+      const res = await fetch(`${API_BASE}/notes/get-by-path?path=${encodeURIComponent(path)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
     },
     enabled: !!path,
   });
