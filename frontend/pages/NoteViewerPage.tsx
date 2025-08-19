@@ -35,7 +35,7 @@ export function NoteViewerPage() {
     return (
       <div className="text-center text-red-500 mt-8">
         <p>Error al cargar la nota.</p>
-        <p>{error.message}</p>
+        <p>{(error as Error).message}</p>
       </div>
     );
   }
@@ -54,7 +54,7 @@ export function NoteViewerPage() {
     <div className="max-w-4xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>{note.title}</CardTitle>
+          <CardTitle>{note.title?.trim() || note.path.split('/').pop()!.replace(/\.md$/i, '')}</CardTitle>
         </CardHeader>
         <CardContent>
           <pre className="whitespace-pre-wrap font-sans">{note.content}</pre>
