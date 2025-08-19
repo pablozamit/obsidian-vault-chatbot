@@ -1,6 +1,7 @@
 import { api } from "encore.dev/api";
 import { Query } from "encore.dev/api";
 import { Note } from "./types";
+import db from "../external_dbs/postgres/db";
 
 interface ListNotesRequest {
   limit?: Query<number>;
@@ -22,3 +23,14 @@ export const list = api<ListNotesRequest, ListNotesResponse>(
     };
   }
 );
+
+interface ListAllNotesResponse {
+  notes: Pick<Note, "id" | "title" | "path">[];
+}
+
+export const listAll = api.get("/notes/list-all", async (): Promise<ListAllNotesResponse> => {
+  const notes = await db.query<Pick<Note, "id" | "title" | "path">>`
+    SELECT id, title, path FROM notes ORDER BY path ASC
+  `;
+  return { notes };
+});
