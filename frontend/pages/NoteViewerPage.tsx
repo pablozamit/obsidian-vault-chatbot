@@ -6,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function NoteViewerPage() {
   const [searchParams] = useSearchParams();
-  const path = searchParams.get('path');
+  const path = searchParams.get('path') || '';
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['note', path],
-    queryFn: () => backend.notes.getByPath({ path: path || '' }),
+    queryFn: async () => {
+      if (!path) return null;
+      return await backend.notes.getByPath({ path });
+    },
     enabled: !!path,
   });
 
@@ -50,11 +53,16 @@ export function NoteViewerPage() {
     );
   }
 
+  const title =
+    note.title?.trim() ||
+    note.path.split('/').pop()?.replace(/\.md$/i, '') ||
+    'Nota sin título';
+
   return (
     <div className="max-w-4xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>{note.title?.trim() || note.path.split('/').pop()!.replace(/\.md$/i, '')}</CardTitle>
+          <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
           <pre className="whitespace-pre-wrap font-sans">{note.content}</pre>
