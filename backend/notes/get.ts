@@ -1,5 +1,4 @@
 import { api } from "encore.dev/api";
-import { Note } from "./types";
 import db from "../external_dbs/postgres/db";
 
 interface GetByPathRequest {
@@ -7,15 +6,29 @@ interface GetByPathRequest {
 }
 
 interface GetByPathResponse {
-  note: Note | null;
+  note: {
+    id: string;        // ← string, no number
+    title: string | null;
+    path: string;
+    content: string | null;
+    updated_at: string | null;
+  } | null;
 }
 
 export const getByPath = api<GetByPathRequest, GetByPathResponse>(
-  { expose: true, method: "POST", path: "/notes/get-by-path" },
+  { expose: true, method: "GET", path: "/notes/get-by-path" },
   async ({ path }) => {
-    const note = await db.queryOne<Note>`
-      SELECT * FROM notes WHERE path = ${path}
+    const rows = await db.query<GetByPathResponse["note"]>`
+      SELECT
+        id::text AS id,
+        title,
+        path,
+        content,
+        updated_at
+      FROM notes
+      WHERE path = ${path}
+      LIMIT 1
     `;
-    return { note: note ?? null };
+    return { note: rows[0] ?? null };
   }
 );
