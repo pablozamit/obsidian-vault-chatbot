@@ -1,3 +1,4 @@
+// frontend/pages/ChatPage.tsx
 import React, { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -25,6 +26,7 @@ type ListResp = {
 function NotesSidebar() {
   const { data, isLoading, error } = useQuery<ListResp>({
     queryKey: ['allNotes'],
+    // usa SOLO el endpoint que ya existe en el cliente generado
     queryFn: () => backend.notes.list({ limit: 2000, offset: 0 }),
   });
 
@@ -78,7 +80,7 @@ export function ChatPage() {
     },
     onSuccess: (response: ChatResponse) => {
       setConversationId(response.conversation_id);
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
@@ -105,7 +107,7 @@ export function ChatPage() {
     const userMessage = input.trim();
     setInput('');
 
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
       {
         id: Date.now().toString(),
@@ -120,9 +122,7 @@ export function ChatPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Chat con tu Bóveda de Obsidian
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Chat con tu Bóveda de Obsidian</h1>
         <p className="text-gray-600">
           Haz preguntas sobre tus notas y obtén respuestas inteligentes basadas en tu conocimiento.
         </p>
@@ -158,18 +158,12 @@ export function ChatPage() {
                     >
                       <div
                         className={`max-w-[80%] rounded-lg p-4 ${
-                          message.type === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-900'
+                          message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'
                         }`}
                       >
                         <div className="flex items-start space-x-2">
-                          {message.type === 'assistant' && (
-                            <Bot className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                          )}
-                          {message.type === 'user' && (
-                            <User className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                          )}
+                          {message.type === 'assistant' && <Bot className="w-5 h-5 mt-0.5 flex-shrink-0" />}
+                          {message.type === 'user' && <User className="w-5 h-5 mt-0.5 flex-shrink-0" />}
                           <div className="flex-1">
                             <div className="whitespace-pre-wrap">{message.content}</div>
                             {message.sources && message.sources.length > 0 && (
@@ -177,11 +171,7 @@ export function ChatPage() {
                                 <p className="text-sm font-medium mb-2">Fuentes:</p>
                                 <div className="space-y-1">
                                   {message.sources.map((source) => (
-                                    <Badge
-                                      key={source.id}
-                                      variant="secondary"
-                                      className="mr-1 mb-1"
-                                    >
+                                    <Badge key={source.id} variant="secondary" className="mr-1 mb-1">
                                       <ExternalLink className="w-3 h-3 mr-1" />
                                       {source.title}
                                     </Badge>
@@ -219,18 +209,8 @@ export function ChatPage() {
                   disabled={chatMutation.isPending}
                   className="flex-1"
                 />
-                <Button
-                  type="submit"
-                  disabled={!input.trim() || chatMutation.isPending}
-                  size="icon"
-                >
+                <Button type="submit" disabled={!input.trim() || chatMutation.isPending} size="icon">
                   <Send className="w-4 h-4" />
                 </Button>
               </form>
             </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
