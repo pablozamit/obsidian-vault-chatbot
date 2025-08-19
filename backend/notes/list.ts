@@ -1,6 +1,5 @@
 import { api } from "encore.dev/api";
 import { Query } from "encore.dev/api";
-import { Note } from "./types";
 import db from "../external_dbs/postgres/db";
 
 interface ListNotesRequest {
@@ -8,29 +7,75 @@ interface ListNotesRequest {
   offset?: Query<number>;
 }
 
+// Filas devueltas por /notes (paginado)
+type ListedNote = {
+  id: string;                 // casteado desde int8 → text
+  title: string | null;       // puede venir null
+  path: string;
+  updated_at: string | null;  // ISO string o null
+};
+
 interface ListNotesResponse {
-  notes: Note[];
+  notes: ListedNote[];
   total: number;
 }
 
+// Filas devueltas por /notes/list-all (sin paginar, solo datos mínimos para el sidebar)
+type ListedNoteLite = {
+  id: string;           // casteado desde int8 → text
+  title: string | null; // puede venir null
+  path: string;
+};
+
+interface ListAllNotesResponse {
+  notes: ListedNoteLite[];
+}
+
+/**
+ * Lista paginada de notas.
+ */
 export const list = api<ListNotesRequest, ListNotesResponse>(
   { expose: true, method: "GET", path: "/notes" },
   async (req) => {
-    console.log("Endpoint /notes/list llamado, devolviendo respuesta vacía.");
+    const limit = Number(req.limit ?? 200);
+    const offset = Number(req.offset ?? 0);
+
+    const notes = await db.query<ListedNote>`
+      SELECT
+        id::text AS id,
+        title,
+        path,
+        updated_at
+      FROM notes
+      ORDER BY path ASC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const [{ count }] = await db.query<{ count: number }>`
+      SELECT COUNT(*)::int AS count FROM notes
+    `;
+
     return {
-      notes: [],
-      total: 0
+      notes,
+      total: count,
     };
   }
 );
 
-interface ListAllNotesResponse {
-  notes: Pick<Note, "id" | "title" | "path">[];
-}
-
-export const listAll = api.get("/notes/list-all", async (): Promise<ListAllNotesResponse> => {
-  const notes = await db.query<Pick<Note, "id" | "title" | "path">>`
-    SELECT id, title, path FROM notes ORDER BY path ASC
-  `;
-  return { notes };
-});
+/**
+ * Lista completa de notas (para el sidebar). No paginada.
+ */
+export const listAll = api<undefined, ListAllNotesResponse>(
+  { expose: true, method: "GET", path: "/notes/list-all" },
+  async () => {
+    const notes = await db.query<ListedNoteLite>`
+      SELECT
+        id::text AS id,
+        title,
+        path
+      FROM notes
+      ORDER BY path ASC
+    `;
+    return { notes };
+  }
+);
