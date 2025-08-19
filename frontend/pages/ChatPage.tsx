@@ -1,3 +1,4 @@
+// frontend/pages/ChatPage.tsx
 import React, { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -9,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import backend from '~backend/client';
 import type { ChatResponse, SearchResult } from '~backend/notes/types';
+
+const API_BASE = import.meta.env.VITE_API_BASE as string;
 
 interface Message {
   id: string;
@@ -24,9 +27,9 @@ type AllNotesResponse = {
 function NotesSidebar() {
   const { data, isLoading, error } = useQuery<AllNotesResponse>({
     queryKey: ['allNotes'],
-    // Usamos el endpoint expuesto directamente, ya que el cliente generado no incluye listAll
+    // Llama al backend (Encore) usando la base URL del backend, no el dominio del frontend
     queryFn: async () => {
-      const res = await fetch('/notes/list-all', { method: 'GET' });
+      const res = await fetch(`${API_BASE}/notes/list-all`, { method: 'GET' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     },
