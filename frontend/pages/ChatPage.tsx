@@ -1,4 +1,3 @@
-// frontend/pages/ChatPage.tsx
 import React, { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -11,8 +10,6 @@ import { useToast } from '@/components/ui/use-toast';
 import backend from '~backend/client';
 import type { ChatResponse, SearchResult } from '~backend/notes/types';
 
-const API_BASE = import.meta.env.VITE_API_BASE as string;
-
 interface Message {
   id: string;
   type: 'user' | 'assistant';
@@ -20,19 +17,15 @@ interface Message {
   sources?: SearchResult[];
 }
 
-type AllNotesResponse = {
-  notes: { id: string; title: string | null; path: string }[];
+type ListResp = {
+  notes: { id: string; title: string | null; path: string; updated_at: string | null }[];
+  total: number;
 };
 
 function NotesSidebar() {
-  const { data, isLoading, error } = useQuery<AllNotesResponse>({
+  const { data, isLoading, error } = useQuery<ListResp>({
     queryKey: ['allNotes'],
-    // Llama al backend (Encore) usando la base URL del backend, no el dominio del frontend
-    queryFn: async () => {
-      const res = await fetch(`${API_BASE}/notes/list-all`, { method: 'GET' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    },
+    queryFn: () => backend.notes.list({ limit: 2000, offset: 0 }),
   });
 
   return (
