@@ -3,31 +3,19 @@ import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import backend from '~backend/client';
+import type { SearchResult } from '~backend/notes/types';
 
-const API_BASE = import.meta.env.VITE_API_BASE as string;
-
-type NoteResp = {
-  note: {
-    id: string;
-    title: string | null;
-    path: string;
-    content: string | null;
-    updated_at: string | null;
-  } | null;
-};
+type SearchResp = { results: SearchResult[] };
 
 export function NoteViewerPage() {
   const [searchParams] = useSearchParams();
   const path = searchParams.get('path') || '';
 
-  const { data, isLoading, error } = useQuery<NoteResp | null>({
-    queryKey: ['note', path],
-    queryFn: async () => {
-      if (!path) return null;
-      const res = await fetch(`${API_BASE}/notes/get-by-path?path=${encodeURIComponent(path)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    },
+  const { data, isLoading, error } = useQuery<SearchResp>({
+    queryKey: ['note-by-path', path],
+    // usamos SOLO el endpoint existente `search` y filtramos por `path`
+    queryFn: async () => backend.notes.search({ query: path, limit: 10, threshold: 0 }),
     enabled: !!path,
   });
 
@@ -57,7 +45,12 @@ export function NoteViewerPage() {
     );
   }
 
-  const note = data?.note;
+  const results = data?.results ?? [];
+  // buscamos coincidencia exacta por path; si no, tomamos el primer resultado
+  const note =
+    results.find((r) => r.path === path) ??
+    results[0] ??
+    null;
 
   if (!note) {
     return (
@@ -68,15 +61,24 @@ export function NoteViewerPage() {
   }
 
   const title =
-    note.title?.trim() ||
+    (note.title && note.title.trim()) ||
     note.path.split('/').pop()?.replace(/\.md$/i, '') ||
     'Nota sin título';
+
+  // updated_at llega como number en SearchResult (según tus types); lo formateamos si existe
+  const updated =
+    (note as any).updated_at
+      ? new Date(Number((note as any).updated_at)).toLocaleString()
+      : null;
 
   return (
     <div className="max-w-4xl mx-auto">
       <Card>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
+          {updated && (
+            <div className="text-xs text-gray-500 mt-1">Actualizada: {updated}</div>
+          )}
         </CardHeader>
         <CardContent>
           <pre className="whitespace-pre-wrap font-sans">{note.content}</pre>
