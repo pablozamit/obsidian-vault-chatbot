@@ -17,10 +17,19 @@ interface Message {
   sources?: SearchResult[];
 }
 
+type AllNotesResponse = {
+  notes: { id: string; title: string | null; path: string }[];
+};
+
 function NotesSidebar() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<AllNotesResponse>({
     queryKey: ['allNotes'],
-    queryFn: () => backend.notes.listAll(),
+    // Usamos el endpoint expuesto directamente, ya que el cliente generado no incluye listAll
+    queryFn: async () => {
+      const res = await fetch('/notes/list-all', { method: 'GET' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    },
   });
 
   return (
@@ -34,7 +43,7 @@ function NotesSidebar() {
       <CardContent className="flex-1 overflow-y-auto">
         {isLoading && <p>Cargando notas...</p>}
         {error && <p className="text-red-500">Error al cargar las notas.</p>}
-        {data?.notes && (
+        {data?.notes && data.notes.length > 0 && (
           <ul className="space-y-2">
             {data.notes.map((note) => (
               <li key={note.id}>
@@ -44,11 +53,14 @@ function NotesSidebar() {
                   className="text-blue-600 hover:underline"
                   title={note.path}
                 >
-                  {note.title}
+                  {note.title?.trim() || note.path.split('/').pop()!.replace(/\.md$/i, '')}
                 </Link>
               </li>
             ))}
           </ul>
+        )}
+        {data?.notes && data.notes.length === 0 && (
+          <p className="text-gray-500">No hay notas.</p>
         )}
       </CardContent>
     </Card>
@@ -193,9 +205,9 @@ export function ChatPage() {
                       <div className="flex items-center space-x-2">
                         <Bot className="w-5 h-5" />
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-2 h-2 rounded-full animate-bounce bg-gray-400"></div>
+                          <div className="w-2 h-2 rounded-full animate-bounce bg-gray-400" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 rounded-full animate-bounce bg-gray-400" style={{ animationDelay: '0.2s' }}></div>
                         </div>
                       </div>
                     </div>
