@@ -6,6 +6,7 @@ import { Navigation } from './components/Navigation';
 import { UploadPage } from './pages/UploadPage';
 import { ChatPage } from './pages/ChatPage';
 import { NotesPage } from './pages/NotesPage';
+import { NoteViewerPage } from './pages/NoteViewerPage';
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ export default function App() {
               <Route path="/" element={<ChatPage />} />
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/notes" element={<NotesPage />} />
+              <Route path="/note" element={<NoteViewerPage />} />
             </Routes>
           </main>
           <Toaster />
